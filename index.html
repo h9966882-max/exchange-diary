@@ -15,7 +15,7 @@ const $=id=>document.getElementById(id);let session=null,currentBook=null;
 const esc=s=>(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=d=>d?d.replaceAll("-","/"):"";
 async function boot(){const{data}=await sb.auth.getSession();session=data.session;if(session)await enter();sb.auth.onAuthStateChange(async(_,s)=>{session=s;if(s)await enter()})}
-$("login").onclick=async()=>{const email=$("email").value.trim();if(!email)return $("msg").textContent="メールアドレスを入力してね。";const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split("#")[0]}});$("msg").textContent=error?error.message:"📮 ログインリンクを送りました。"};
+$("login").onclick=async()=>{const email=$("email").value.trim();if(!email)return $("msg").textContent="メールアドレスを入力してね。";const password=$("password").value;if(!password)return $("msg").textContent="パスワードを入力してね。";const{error}=await sb.auth.signInWithPassword({email,password});$("msg").textContent=error?"メールアドレスかパスワードを確認してね。":""};
 async function enter(){const{data:ok,error}=await sb.rpc("is_exchange_diary_owner");if(error||!ok){$("msg").textContent="このアカウントには日記へのアクセス権がありません。";return}$("auth").style.display="none";$("library").style.display="block";await refreshBook()}
 async function refreshBook(){const{data:b}=await sb.from("exchange_diary_books").select("*").order("volume",{ascending:false}).limit(1).maybeSingle();currentBook=b;$("spineStatus").textContent=!b?"NEW":b.status==="closed"?"CLOSED":"OPEN";$("dates").textContent=!b?"— OPEN":fmt(b.started_on)+" — "+(b.status==="closed"?fmt(b.closed_on):"OPEN")}
 $("vol1").onclick=async()=>{await refreshBook();$("library").style.display="none";$("cover").style.display="block";$("nav").style.display="block"};
